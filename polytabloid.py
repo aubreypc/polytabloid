@@ -1,5 +1,6 @@
 from itertools import permutations
 from copy import copy
+from numpy import column_stack, linalg
 
 class Tableaux(object):
     def __init__(self, shape, vals=None):
@@ -136,47 +137,54 @@ def tableaux_gen_recursive(shape, t=None, adding=2):
         new_vals = copy(t.vals)
         missing = t.vals.index(None)
         new_vals[missing] = adding
-        #print "reached base case, yielding."
         yield Tableaux(shape, vals=new_vals)
     else:
         for (i, node) in enumerate(t.vals):
             if node == None:
                 r, c = t.coords_of_index(i)
-                #print "recursion level: {}".format(adding-2)
-                #print "{} has coords {},{}; i={}".format(node, r, c, i) # TODO: Why am i getting (1,0) for both i=3 and i=4???
-                #print t.vals
                 if c > 0:
-                    #print "left neighbor at {},{}: {}".format(r, c-1, t.coords(r, c-1))
                     if not t.coords(r, c-1): # left neighbor node must not be empty
                         continue
                 if r > 0:
-                    #print "above neighbor at {},{}: {}".format(r-1, c, t.coords(r-1, c))
                     if not t.coords(r-1, c): # above neighbor node must not be empty
                         continue
                 new_vals = copy(t.vals)
                 new_vals[i] = adding
                 new_t = Tableaux(shape, vals=new_vals)
-                #print "recursive child: {}".format(t.vals, new_t.vals)
                 recurs = tableaux_gen_recursive(shape, t = new_t, adding = adding + 1)
                 for result in recurs:
-                    #print "child yielded"
                     yield result
-
 
 if __name__ == "__main__":
     shape = (3,2)
-    t = Tableaux(shape)
-    for i in range(sum(shape)):
-        print t.coords_of_index(i)
     gen = tableaux_gen_recursive(shape)
-    print "Generating all standard {}-tableaux...".format(shape)
+    print "Generating all standard {}-tableaux...\n".format(shape)
+    polys = []
+    print "-" * 20
     for t in gen:
+        standards = [t]
         print "Next tableaux:\n{}\n".format(t)
-    """
         poly = set([tab for tab in t.polytabloid() if tab != t])
         if len(poly) > 0:
             print "Found standards in polytabloid:"
             for s in poly:
                 print "{}\n".format(s)
+                standards.append(s)
+        polys.append(standards)
         print "-" * 20
-    """
+    columns = []
+    print "Creating matrix from polytabloids."
+    for i, poly in enumerate(polys):
+        vec = [0] * len(polys)
+        vec[i] = 1
+        if len(poly) > 1:
+            for s in poly:
+                #find the index of the standard tableaux
+                x = [l[0] for l in polys].index(s)
+                vec[x] = 1
+        columns.append(vec)
+    matrix = column_stack(columns)
+    print matrix
+    solution = map(int, linalg.solve(matrix, [1] * len(polys)))
+    print "Solution vector: {}".format(solution)
+    print "Sum of standard coefficients is congruent to {} (mod 2).".format(sum(solution) % 2)
