@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from itertools import permutations
 from copy import copy
 from numpy import column_stack, linalg
@@ -44,8 +45,6 @@ class Tableaux(object):
         for i in range(r + 1):
             row = next(rows)
         return row[c]
-
-
 
     def rows(self, indices=False):
         start = 0
@@ -156,7 +155,13 @@ def tableaux_gen_recursive(shape, t=None, adding=2):
                     yield result
 
 if __name__ == "__main__":
-    shape = (3,2)
+    parser = ArgumentParser()
+    parser.add_argument("partition", nargs="*")
+    args = parser.parse_args()
+    if args.partition:
+        shape = tuple(map(int, args.partition))
+    else:
+        shape = (3,2)
     gen = tableaux_gen_recursive(shape)
     print "Generating all standard {}-tableaux...\n".format(shape)
     polys = []
