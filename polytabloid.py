@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from itertools import permutations
+from itertools import permutations, product
 from copy import copy
 from numpy import column_stack, linalg
 
@@ -92,7 +92,7 @@ class Tableaux(object):
 
     def col_stabilizer(self):
         for col in self.columns():
-            yield [(1,)] + list(permutations(col))
+            yield list(permutations(col))
             #TODO: still need to include products, via itertools product.
 
     def permute(self, *args):
@@ -109,14 +109,29 @@ class Tableaux(object):
                 new_vals[j] = args[0]
         return Tableaux(self.shape, new_vals)
 
+    def set_column(self, i, col):
+        _col = list(col)
+        new_vals = []
+        for row in self.rows():
+            if len(row) > i: 
+                row[i] = _col.pop(0)
+            for node in row:
+                new_vals.append(node)
+        self.vals = new_vals
+
     def polytabloid(self, include_nonstandard=False):
-        for col_perm in self.col_stabilizer():
-            for p in col_perm:
-                s = self.permute(*p).sort_rows()
-                if include_nonstandard:
-                    yield s
-                elif s.is_standard():
-                    yield s
+        for col_perm in product(*self.col_stabilizer()):
+            if col_perm[0][0] != 1 and not include_nonstandard: # 1 must be fixed for permuted tableaux to be standard
+                continue
+            _vals = copy(self.vals)
+            t = Tableaux(self.shape, vals=_vals)
+            for i,c in enumerate(col_perm): # apply each permutation in column-indexed list
+                t.set_column(i, c)
+            t.sort_rows()
+            if include_nonstandard:
+                yield t
+            elif t.is_standard():
+                yield t
 
 def tableaux_gen(shape):
     """
@@ -170,11 +185,12 @@ if __name__ == "__main__":
         standards = [t]
         print "Next tableaux:\n{}\n".format(t)
         poly = set([tab for tab in t.polytabloid() if tab != t])
-        if len(poly) > 0:
+        if len(poly) > 1:
             print "Found standards in polytabloid:"
             for s in poly:
-                print "{}\n".format(s)
-                standards.append(s)
+                if s.vals != t.vals:
+                    print "{}\n".format(s)
+                    standards.append(s)
         polys.append(standards)
         print "-" * 20
     columns = []
