@@ -37,10 +37,9 @@ if __name__ == "__main__":
     # Automation mode:
     # find the the largest n currently in the database,
     # and figure out which partitions of n still need to be generated.
-    if args.regen:
+    n = cur.execute("SELECT max(n) FROM specht").fetchone()[0]
+    if args.regen or not n:
         n = 2 
-    else:
-        n = cur.execute("SELECT max(n) FROM specht").fetchone()[0]
     while True:
         p_gen = partition_gen(n)
         for p in p_gen:
