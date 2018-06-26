@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from itertools import permutations, product
 from copy import copy
 from numpy import column_stack, linalg
+from partition import Partition
 
 class Tableaux(object):
     def __init__(self, shape, vals=None):
@@ -30,7 +31,7 @@ class Tableaux(object):
         Convert an index i of self.vals into (row, col) coords of the 
         position of self.vals[i].
         """
-        if i > sum(shape):
+        if i > sum(self.shape):
             return False
         for r,length in enumerate(self.shape):
             if i < length:
@@ -169,32 +170,32 @@ def tableaux_gen_recursive(shape, t=None, adding=2):
                 for result in recurs:
                     yield result
 
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("partition", nargs="*")
-    args = parser.parse_args()
-    if args.partition:
-        shape = tuple(map(int, args.partition))
-    else:
-        shape = (3,2)
+def find_solution(shape, verbose=False):
+    if type(shape) is Partition:
+        shape = shape.vals
     gen = tableaux_gen_recursive(shape)
-    print "Generating all standard {}-tableaux...\n".format(shape)
+    if verbose:
+        print "Generating all standard {}-tableaux...\n".format(shape)
     polys = []
-    print "-" * 20
+    if verbose:
+        print "-" * 20
     for t in gen:
         standards = [t]
-        print "Next tableaux:\n{}\n".format(t)
+        if verbose:
+            print "Next tableaux:\n{}\n".format(t)
         poly = set([tab for tab in t.polytabloid() if tab != t])
         if len(poly) > 1:
-            print "Found standards in polytabloid:"
+            if verbose:
+                print "Found standards in polytabloid:"
             for s in poly:
                 if s.vals != t.vals:
-                    print "{}\n".format(s)
+                    if verbose:
+                        print "{}\n".format(s)
                     standards.append(s)
         polys.append(standards)
-        print "-" * 20
     columns = []
-    print "Creating matrix from polytabloids."
+    if verbose:
+        print "Creating matrix from polytabloids."
     for i, poly in enumerate(polys):
         vec = [0] * len(polys)
         vec[i] = 1
@@ -205,7 +206,21 @@ if __name__ == "__main__":
                 vec[x] = 1
         columns.append(vec)
     matrix = column_stack(columns)
-    print matrix
+    if verbose:
+        print matrix
     solution = map(int, linalg.solve(matrix, [1] * len(polys)))
-    print "Solution vector: {}".format(solution)
-    print "Sum of standard coefficients is congruent to {} (mod 2).".format(sum(solution) % 2)
+    if verbose:
+        print "Solution vector: {}".format(solution)
+        print "Sum of standard coefficients is congruent to {} (mod 2).".format(sum(solution) % 2)
+    return sum(solution)
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("partition", nargs="*")
+    args = parser.parse_args()
+    if args.partition:
+        shape = tuple(map(int, args.partition))
+    else:
+        shape = (3,2)
+    print find_solution(shape)
