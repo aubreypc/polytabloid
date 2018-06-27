@@ -8,6 +8,10 @@ if __name__ == "__main__":
     conn = sqlite3.connect('data.db')
     cur = conn.cursor()
 
+    # Initial database setup
+    cur.execute("CREATE TABLE IF NOT EXISTS specht (n integer, partition text, solution integer)")
+    conn.commit()
+
     parser = ArgumentParser()
     parser.add_argument("--verbose", action="store_true", help="Print additional status info while running.")
     parser.add_argument("--regen", help="Begin automation, overwriting previous database contents.", action="store_true")
