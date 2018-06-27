@@ -57,6 +57,14 @@ def partition_gen(n):
         y = x + y - 1
         yield a[:k + 1][::-1]
 
+def hooks_gen(n):
+    """
+    Generates all hook partitions of an integer n,
+    i.e. partitions of the form (k-r, 1^r).
+    """
+    for i in range(1,n):
+        yield (n - i,) + (1,) * i
+
 if __name__ == "__main__":
     n = 4
     print "Finding all 2-special partitions of {} with 2-special conjugates.".format(n)

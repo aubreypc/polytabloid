@@ -173,6 +173,9 @@ def tableaux_gen_recursive(shape, t=None, adding=2):
 def find_solution(shape, verbose=False):
     if type(shape) is Partition:
         shape = shape.vals
+    if shape == (1,):
+        # isolate this case to avoid numpy exception when building matrix
+        return 1
     gen = tableaux_gen_recursive(shape)
     if verbose:
         print "Generating all standard {}-tableaux...\n".format(shape)
