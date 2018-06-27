@@ -9,14 +9,14 @@ if __name__ == "__main__":
     cur = conn.cursor()
 
     parser = ArgumentParser()
-    parser.add_argument("--verbose", action="store_true")
-    parser.add_argument("--regen", help="Begin automation, overwriting previous database contents", action="store_true")
-    parser.add_argument("-qp", help="Query by partition.", nargs="+")
-    parser.add_argument("-qn", help="Query by number being partitioned.", type=int)
+    parser.add_argument("--verbose", action="store_true", help="Print additional status info while running.")
+    parser.add_argument("--regen", help="Begin automation, overwriting previous database contents.", action="store_true")
+    parser.add_argument("-p", help="Query by partition.", nargs="+")
+    parser.add_argument("-n", help="Query by number being partitioned.", type=int)
     args = parser.parse_args()
 
-    if args.qp:
-        p_str = ",".join(args.qp)
+    if args.p:
+        p_str = ",".join(args.p)
         query = cur.execute("SELECT solution FROM specht WHERE partition=?", (p_str,)).fetchone()
         if query == None:
             print "No data found for ({}). Either the partition/conjugate is not 2-special or it is greater than the current maximum.".format(p_str)
@@ -24,12 +24,12 @@ if __name__ == "__main__":
             print "({}): sum congruent to {} (mod 2).".format(p_str, query[0])
         sys.exit(0)
 
-    elif args.qn:
-        query = cur.execute("SELECT * FROM specht WHERE n=?", (args.qn,))
+    elif args.n:
+        query = cur.execute("SELECT * FROM specht WHERE n=?", (args.n,))
         for _,p,sol in query:
             print "({}): sum congruent to {} (mod 2).".format(p, sol)
         max_n = cur.execute("SELECT max(n) FROM specht").fetchone()[0]
-        if args.qn >= max_n:
+        if args.n >= max_n:
             print "WARNING: given n is greater than or equal to maximum in database. Above list may be incomplete."
         sys.exit(0)
         
