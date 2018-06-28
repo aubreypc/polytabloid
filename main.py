@@ -9,7 +9,7 @@ if __name__ == "__main__":
     cur = conn.cursor()
 
     # Initial database setup
-    cur.execute("CREATE TABLE IF NOT EXISTS specht (n integer, partition text, solution integer)")
+    cur.execute("CREATE TABLE IF NOT EXISTS specht (n integer, partition text primary key, solution integer)")
     conn.commit()
 
     parser = ArgumentParser()
