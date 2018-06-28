@@ -170,7 +170,7 @@ def tableaux_gen_recursive(shape, t=None, adding=2):
                 for result in recurs:
                     yield result
 
-def find_solution(shape, verbose=False):
+def find_solution(shape, verbose=False, skip_known_families=True):
     if type(shape) is Partition:
         shape = shape.vals
     if shape == (1,):

@@ -23,6 +23,20 @@ class Partition(object):
                 if v % mod != (mod - 1):
                     return False
         return True
+    
+    def is_hook(self):
+        if len(self.vals) > 1:
+            if self.vals[1:] == (1,) * (sum(self.vals) - self.vals[0]):
+                return True
+        return False
+
+    def is_one_dimensional(self):
+        if len(self.vals) == 1:
+            return True
+        for r in self.vals:
+            if r != 1:
+                return False
+        return True
 
 def least_greater_power(x, y):
     """
@@ -78,6 +92,9 @@ def self_conjugates_gen(n):
         if p == p.conjugate():
             yield p
     
+def one_dimensional_gen(n):
+    yield Partition(n)
+    yield Partition(*((1,) * n))
 
 if __name__ == "__main__":
     n = 4

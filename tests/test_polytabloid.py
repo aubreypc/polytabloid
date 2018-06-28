@@ -1,5 +1,5 @@
 from ..polytabloid import find_solution
-from ..partition import hooks_gen, self_conjugates_gen
+from ..partition import Partition, hooks_gen, self_conjugates_gen, one_dimensional_gen
 from math import factorial
 
 def test_one_dimensional():
@@ -8,24 +8,36 @@ def test_one_dimensional():
     congruent to 1 (mod 2).
     """
     for k in range(1,8): # how many is enough?
-        assert find_solution((k,)) % 2 == 1
-        assert find_solution((1,) * k) % 2 == 1
+        p1 = Partition(k)
+        p2 = Partition(*((1,) * k))
+        assert p1.is_one_dimensional()
+        assert p2.is_one_dimensional()
+        assert find_solution(p1, skip_known_families=False) % 2 == 1
+        assert find_solution(p2, skip_known_families=False) % 2 == 1
+
+def test_detect_hook_partitions():
+    """
+    Test for false positives in hook detection.
+    """
+    assert not Partition(3,2,1).is_hook() # again, how many to do?
+    assert not Partition(3,3,3).is_hook()
 
 def test_hook_partitions():
     """
     Use Murphy's result to ensure that hook-shaped partitions have
-    expected solution.
+    expected solution, and make sure that all such partitions are caught
+    by the hook detection.
     """
     for i in [3,5,7]: # NOTE: test fails for even vals of i
         for hook in hooks_gen(i):
-            print hook
+            assert Partition(*hook).is_hook()
             r = hook[1:].count(1)
             choose = factorial(i - 1) / (factorial(r) * factorial(i - 1 - r))
             if (i % 2, r % 2, choose % 2) == (1, 0, 1):
                 expected_sol = 1
             else:
                 expected_sol = 0
-            assert find_solution(hook) % 2 == expected_sol
+            assert find_solution(hook, skip_known_families=False) % 2 == expected_sol
 
 def test_self_conjugates():
     """
@@ -34,4 +46,4 @@ def test_self_conjugates():
     """
     for i in range(2,8):
         for sc in self_conjugates_gen(i):
-            assert find_solution(sc) % 2 == 0
+            assert find_solution(sc, skip_known_families=False) % 2 == 0
