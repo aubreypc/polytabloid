@@ -2,6 +2,9 @@ class Partition(object):
     def __init__(self, *vals):
         self.vals = tuple(sorted(vals))[::-1]
 
+    def __eq__(self, other):
+        return self.vals == other.vals
+
     def conjugate(self):
         _vals = [v for v in self.vals]
         con = []
@@ -64,6 +67,17 @@ def hooks_gen(n):
     """
     for i in range(1,n):
         yield (n - i,) + (1,) * i
+
+def self_conjugates_gen(n):
+    """
+    Generates all partitions of an integer n such that
+    the partition is its own conjugate.
+    """
+    for p in partition_gen(n):
+        p = Partition(*p)
+        if p == p.conjugate():
+            yield p
+    
 
 if __name__ == "__main__":
     n = 4

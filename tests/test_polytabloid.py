@@ -1,5 +1,5 @@
 from ..polytabloid import find_solution
-from ..partition import hooks_gen
+from ..partition import hooks_gen, self_conjugates_gen
 from math import factorial
 
 def test_one_dimensional():
@@ -28,4 +28,10 @@ def test_hook_partitions():
             assert find_solution(hook) % 2 == expected_sol
 
 def test_self_conjugates():
-    pass
+    """
+    Partitions equal to their own conjugates should always have
+    solution congruent to 0 when n > 1.
+    """
+    for i in range(2,8):
+        for sc in self_conjugates_gen(i):
+            assert find_solution(sc) % 2 == 0
