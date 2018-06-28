@@ -38,6 +38,9 @@ class Partition(object):
                 return False
         return True
 
+    def is_self_conjugate(self):
+        return self == self.conjugate()
+
 def least_greater_power(x, y):
     """
     Returns least positive integer n such that x^n > y.

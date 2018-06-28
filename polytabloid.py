@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from itertools import permutations, product
 from copy import copy
 from numpy import column_stack, linalg
+from math import factorial
 from partition import Partition
 
 class Tableaux(object):
@@ -173,6 +174,26 @@ def tableaux_gen_recursive(shape, t=None, adding=2):
 def find_solution(shape, verbose=False, skip_known_families=True):
     if type(shape) is Partition:
         shape = shape.vals
+    if skip_known_families:
+        p = Partition(*shape)
+        if p.is_one_dimensional():
+            if verbose:
+                print "Skipping 1D partition"
+            return 1
+        elif p.is_self_conjugate():
+            if verbose:
+                print "Skipping self-conjugate partition"
+            return 0
+        elif p.is_hook():
+            if verbose:
+                print "Skipping hook partition"
+            i = sum(p.vals)
+            r = p.vals[1:].count(1)
+            choose = factorial(i - 1) / (factorial(r) * factorial(i - 1 - r))
+            if (i % 2, r % 2, choose % 2) == (1, 0, 1):
+                return 1
+            else:
+                return 0
     if shape == (1,):
         # isolate this case to avoid numpy exception when building matrix
         return 1

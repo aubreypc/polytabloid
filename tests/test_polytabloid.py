@@ -2,6 +2,15 @@ from ..polytabloid import find_solution
 from ..partition import Partition, hooks_gen, self_conjugates_gen, one_dimensional_gen
 from math import factorial
 
+def test_detect_one_dimensional():
+    """
+    Test for false positives in 1D detection.
+    """
+    assert not Partition(3,3,2).is_one_dimensional()
+    assert not Partition(3,3,3).is_one_dimensional()
+    assert not Partition(11,3,3).is_one_dimensional()
+    assert not Partition(15, 7, 7, 1, 1, 1, 1).is_one_dimensional()
+
 def test_one_dimensional():
     """
     Partitions in the form of (k) or (1^k) should always have solution
@@ -46,4 +55,5 @@ def test_self_conjugates():
     """
     for i in range(2,8):
         for sc in self_conjugates_gen(i):
+            assert sc.is_self_conjugate()
             assert find_solution(sc, skip_known_families=False) % 2 == 0
