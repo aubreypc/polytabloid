@@ -4,6 +4,23 @@ from argparse import ArgumentParser
 import sqlite3
 import sys
 
+def print_query(query, families=False):
+    if type(query) == sqlite3.Cursor:
+        for q in query:
+            print_query(q, families=families)
+        return
+    _, p_str, sol = query
+    family = ""
+    if families:
+        _p = Partition(*map(int, p_str.split(",")))
+        if _p.is_one_dimensional():
+            family = "[1D]"
+        if _p.is_hook():
+            family = "[HOOK]"
+        elif _p.is_self_conjugate():
+            family = "[SELF-CONJ]"
+    print "({}): sum congruent to {} (mod 2). {}".format(p_str, sol, family)
+
 if __name__ == "__main__":
     conn = sqlite3.connect('data.db')
     cur = conn.cursor()
@@ -17,24 +34,30 @@ if __name__ == "__main__":
     parser.add_argument("--regen", help="Begin automation, overwriting previous database contents.", action="store_true")
     parser.add_argument("-p", help="Query by partition.", nargs="+")
     parser.add_argument("-n", help="Query by number being partitioned.", type=int)
+    parser.add_argument("-s", help="Query by solution value.", type=int)
+    parser.add_argument("-f", action="store_true", help="Include partition family in output")
     args = parser.parse_args()
 
     if args.p:
         p_str = ",".join(args.p)
-        query = cur.execute("SELECT solution FROM specht WHERE partition=?", (p_str,)).fetchone()
+        query = cur.execute("SELECT * FROM specht WHERE partition=?", (p_str,)).fetchone()
         if query == None:
             print "No data found for ({}). Either the partition/conjugate is not 2-special or it is greater than the current maximum.".format(p_str)
         else:
-            print "({}): sum congruent to {} (mod 2).".format(p_str, query[0])
+            print_query(query, families=args.f)
         sys.exit(0)
 
     elif args.n:
         query = cur.execute("SELECT * FROM specht WHERE n=?", (args.n,))
-        for _,p,sol in query:
-            print "({}): sum congruent to {} (mod 2).".format(p, sol)
+        print_query(query, families=args.f)
         max_n = cur.execute("SELECT max(n) FROM specht").fetchone()[0]
         if args.n >= max_n:
             print "WARNING: given n is greater than or equal to maximum in database. Above list may be incomplete."
+        sys.exit(0)
+
+    elif args.s:
+        query = cur.execute("SELECT * FROM specht WHERE solution=?", (args.s,))
+        print_query(query, families=args.f)
         sys.exit(0)
         
 
