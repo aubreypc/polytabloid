@@ -1,6 +1,11 @@
+from math import factorial
+
 class Partition(object):
     def __init__(self, *vals):
         self.vals = tuple(sorted(vals))[::-1]
+
+    def __str__(self):
+        return str(self.vals)
 
     def __eq__(self, other):
         return self.vals == other.vals
@@ -14,6 +19,14 @@ class Partition(object):
             con += [l] * v
             _vals = [x - v for x in _vals]
         return Partition(*con)
+
+    def num_row_perms(self):
+        # lambda' has same num of row permutations as lambda has col perms,
+        # so we can figure out which is faster to compute.
+        total = 1
+        for row in self.vals:
+            total *= factorial(row)
+        return total
 
     def is_2special(self):
         for i,v in enumerate(self.vals):
@@ -100,10 +113,10 @@ def one_dimensional_gen(n):
     yield Partition(*((1,) * n))
 
 if __name__ == "__main__":
-    n = 4
+    n = 17
     print "Finding all 2-special partitions of {} with 2-special conjugates.".format(n)
     gen = partition_gen(n)
     for g in gen:
         p = Partition(*g)
-        if p.is_2special() and p.conjugate().is_2special:
+        if p.is_2special() and p.conjugate().is_2special and not p.is_hook() and not p.is_self_conjugate():
             print p.vals

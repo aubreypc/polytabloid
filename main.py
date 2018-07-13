@@ -48,16 +48,23 @@ if __name__ == "__main__":
         p_gen = partition_gen(n)
         for p in p_gen:
             p = Partition(*p)
-            if p.is_2special() and p.conjugate().is_2special():
-                print p.vals
+            p2 = p.conjugate()
+            if p.is_2special() and p2.is_2special():
                 p_str = ",".join(map(str, p.vals))
-                # see if candidate is already in db; otherwise compute & insert solution.
+                p2_str = ",".join(map(str, p2.vals))
+                # see if candidate or conjugate is already in db; otherwise compute & insert solution.
                 in_db = cur.execute("SELECT * FROM specht WHERE partition=?", (p_str,)).fetchone()
                 if in_db != None and not args.regen: # with --regen, override existing db contents
                     continue
-                solution = find_solution(p, verbose=args.verbose)
-                cur.execute("INSERT OR REPLACE INTO specht VALUES (?,?,?)", (n, p_str, solution % 2))
+                if p.num_row_perms() > p2.num_row_perms():
+                    faster_p = p
+                else:
+                    faster_p = p2
+                solution = find_solution(faster_p, verbose=args.verbose)
+                # conjugate has same solution, so insert both
+                cur.execute("INSERT OR REPLACE INTO specht VALUES (?,?,?),(?,?,?)", (n, p_str, solution % 2, n, p2_str, solution % 2))
                 if args.verbose:
                     print "Inserting ({}, {}, {})".format(n, p_str, solution % 2)
+                    print "Inserting ({}, {}, {})".format(n, p2_str, solution % 2)
                 conn.commit()
         n += 1
