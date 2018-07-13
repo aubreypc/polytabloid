@@ -24,7 +24,7 @@ def print_query(query, families=False, pad=1):
             family = "[HOOK]"
         elif _p.is_self_conjugate():
             family = "[SELF-CONJ]"
-    print u"{:{pad}} \u22a2 {}: solution {} (mod 2). {}".format("(" + p_str + ")", n, sol, family, pad=pad+2).encode("utf-8") 
+    print u"{:{pad}} \u22a2 {:2}: solution {} {}".format("(" + p_str + ")", n, sol, family, pad=pad+2).encode("utf-8") 
 
 if __name__ == "__main__":
     conn = sqlite3.connect('data.db')
@@ -40,10 +40,16 @@ if __name__ == "__main__":
     parser.add_argument("-p", help="Query by partition.", nargs="+")
     parser.add_argument("-n", help="Query by number being partitioned.", type=int)
     parser.add_argument("-s", help="Query by solution value.", type=int)
+    parser.add_argument("-a", action="store_true", help="Output entire data set.")
     parser.add_argument("-sf", action="store_true", help="Include partition family in output")
     args = parser.parse_args()
 
-    if args.p:
+    if args.a:
+        query = cur.execute("SELECT * FROM specht")
+        print_query(query, families=args.sf)
+        sys.exit(0)
+
+    elif args.p:
         p_str = ",".join(args.p)
         query = cur.execute("SELECT * FROM specht WHERE partition=?", (p_str,)).fetchone()
         if query == None:
