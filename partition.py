@@ -2,7 +2,10 @@ from math import factorial
 
 class Partition(object):
     def __init__(self, *vals):
-        self.vals = tuple(sorted(vals))[::-1]
+        if type(vals[0]) in [str, unicode]:
+            self.vals = tuple(map(int, vals[0].split(",")))
+        else:
+            self.vals = tuple(sorted(vals))[::-1]
 
     def __str__(self):
         return str(self.vals)

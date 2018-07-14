@@ -5,7 +5,7 @@ import sqlite3
 import sys
 
 def print_query(query, families=False, pad=1):
-    if type(query) == sqlite3.Cursor:
+    if type(query) in (sqlite3.Cursor, list):
         longest = ""
         results = []
         for q in query:
@@ -40,6 +40,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", help="Query by partition.", nargs="+")
     parser.add_argument("-n", help="Query by number being partitioned.", type=int)
     parser.add_argument("-s", help="Query by solution value.", type=int)
+    parser.add_argument("-f", help="Query by partition family.", type=str)
     parser.add_argument("-a", action="store_true", help="Output entire data set.")
     parser.add_argument("-sf", action="store_true", help="Include partition family in output")
     args = parser.parse_args()
@@ -58,6 +59,34 @@ if __name__ == "__main__":
             print_query(query, families=args.sf)
         sys.exit(0)
 
+
+    elif args.f:
+        if args.s:
+            query = cur.execute("SELECT * FROM specht WHERE solution=?", (args.s,))
+        elif args.n:
+            query = cur.execute("SELECT * FROM specht WHERE n=?", (args.n,))
+        else:
+            query = cur.execute("SELECT * FROM specht")
+        if args.f.lower() in ("hook", "hooks"):
+            _match = (lambda p: p.is_hook())
+        elif args.f.lower() in ("1d", "one dimensional", "one-dimensional"):
+            _match = (lambda p: p.is_one_dimensional())
+        elif args.f.lower() in ("self", "self-conj", "self-conjugate"):
+            _match = (lambda p: p.is_self_conjugate())
+        elif args.f.lower() == "none":
+            _match = (lambda p: not p.is_self_conjugate() and not p.is_one_dimensional() and not p.is_hook())
+        else:
+            print "Family not recognized. Please use 'hook', '1d', 'self-conj', or 'none'."
+            sys.exit(1)
+        match = [(n, p_str, sol) for n, p_str, sol in query if _match(Partition(p_str))]
+        print_query(match, families=args.sf)
+        sys.exit(0)
+
+    elif args.s:
+        query = cur.execute("SELECT * FROM specht WHERE solution=?", (args.s,))
+        print_query(query, families=args.sf)
+        sys.exit(0)
+
     elif args.n:
         query = cur.execute("SELECT * FROM specht WHERE n=?", (args.n,))
         print_query(query, families=args.sf)
@@ -65,12 +94,6 @@ if __name__ == "__main__":
         if args.n >= max_n:
             print "WARNING: given n is greater than or equal to maximum in database. Above list may be incomplete."
         sys.exit(0)
-
-    elif args.s:
-        query = cur.execute("SELECT * FROM specht WHERE solution=?", (args.s,))
-        print_query(query, families=args.sf)
-        sys.exit(0)
-        
 
     # Automation mode:
     # find the the largest n currently in the database,
