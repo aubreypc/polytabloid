@@ -1,4 +1,4 @@
-from polytabloid import find_solution
+from polytabloid import find_solution, find_solution_new
 from partition import partition_gen, Partition
 from argparse import ArgumentParser
 import sqlite3
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     conn.commit()
 
     parser = ArgumentParser()
-    parser.add_argument("--verbose", action="store_true", help="Print additional status info while running.")
+    parser.add_argument("--verbosity", help="Print additional status info while running.", type=int, default=0)
     parser.add_argument("--regen", help="Begin automation, overwriting previous database contents.", action="store_true")
     parser.add_argument("-p", help="Query by partition.", nargs="+")
     parser.add_argument("-n", help="Query by number being partitioned.", type=int)
@@ -117,10 +117,12 @@ if __name__ == "__main__":
                     faster_p = p
                 else:
                     faster_p = p2
-                solution = find_solution(faster_p, verbose=args.verbose)
+                if args.verbosity > 0:
+                    print "Next partition: {}".format(faster_p)
+                solution = find_solution_new(faster_p, verbosity=args.verbosity)
                 # conjugate has same solution, so insert both
                 cur.execute("INSERT OR REPLACE INTO specht VALUES (?,?,?),(?,?,?)", (n, p_str, solution % 2, n, p2_str, solution % 2))
-                if args.verbose:
+                if args.verbosity > 0:
                     print "Inserting ({}, {}, {})".format(n, p_str, solution % 2)
                     print "Inserting ({}, {}, {})".format(n, p2_str, solution % 2)
                 conn.commit()

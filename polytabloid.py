@@ -41,6 +41,8 @@ class Tableaux(object):
         return False #not found
 
     def coords(self, r, c):
+        if r < 0:
+            return None
         if r == 0:
             return self.vals[c]
         rows = self.rows()
@@ -135,6 +137,25 @@ class Tableaux(object):
             elif t.is_standard():
                 yield t
 
+    def generates(self, other):
+        mapping = {}
+        for i,k in enumerate(self.vals):
+            self_r, self_c = self.coords_of_index(i)
+            other_r, other_c = other.coords_of_index(other.vals.index(k))
+            if self_r == other_r:
+                mapping[k] = k
+            else:
+                try:
+                    target = self.coords(other_r, self_c)
+                except IndexError: # required column permutation is impossible
+                    return False
+                # other failure condition: if mapping ceases to be a bijection
+                # i.e. if there exists j -> target
+                for j in range(1, k-1):
+                    if mapping.get(j) == target:
+                        return False
+        return True
+
 def tableaux_gen(shape):
     """
     Generates all standard tableaux for a particular partition, via brute force.
@@ -170,6 +191,54 @@ def tableaux_gen_recursive(shape, t=None, adding=2):
                 recurs = tableaux_gen_recursive(shape, t = new_t, adding = adding + 1)
                 for result in recurs:
                     yield result
+
+def total_order(shape, t=None, adding=None):
+    # generates all standard tableaux, in order.
+    if not adding:
+        adding = sum(shape)
+    if not t:
+        t = Tableaux(shape, vals=[0] * adding)
+    rows = [r for r in t.rows()]
+    for i,k in enumerate(t.vals):
+        if k != 0:
+            #print "k nonzero"
+            continue
+        r, c = t.coords_of_index(i)
+        #print (r,c)
+        #print r
+        if r == len(shape) - 1: # must place in last row, or...
+            #print "in last row"
+            pass
+        else: # ...if not in last row, must be above a higher value
+            if len(rows[r+1]) - 1 < c:
+                #print "not in last row but is an overhang"
+                pass
+            elif t.coords(r+1, c) not in (0, None):
+                #print "not in last row but above hihger value"
+                pass
+            else:
+                #print "neither last row nor higher value nor overhang"
+                continue
+        if c == len(rows[r]) - 1: # must place in last column, or...
+            #print "in last col"
+            pass
+        else: # ...if not in last column, must be left of a higher value
+            if t.coords(r, c+1) != 0:
+                #print "not in last col but left of higher val"
+                pass
+            else:
+                #print "neither last col nor higher val"
+                continue
+        next_vals = [val for val in t.vals]
+        next_vals[i] = adding
+        #print next_vals
+        if adding == 1: # base case
+            #print "base case"
+            yield Tableaux(shape, vals=next_vals)
+        else: # recursive case
+            #print "recursive case"
+            for child in total_order(shape, t=Tableaux(shape, vals=next_vals), adding=adding-1):
+                yield child
 
 def find_solution(shape, verbose=False, skip_known_families=True):
     if type(shape) is Partition:
@@ -238,6 +307,26 @@ def find_solution(shape, verbose=False, skip_known_families=True):
         print "Sum of standard coefficients is congruent to {} (mod 2).".format(sum(solution) % 2)
     return sum(solution)
 
+def find_solution_new(shape, verbosity=0):
+    if type(shape) == Partition:
+        shape = shape.vals
+    standards = [s for s in total_order(shape)]
+    vector = [0] * len(standards)
+    solution = 0
+    for i,t in enumerate(standards):
+        if verbosity > 1:
+            print "Next tableau:\n{}".format(t)
+        if vector[i] == 1:
+            if verbosity > 1:
+                print "Skipping polytabloid computation."
+            continue
+        for j,t2 in enumerate(standards[:i]):
+            if t == t2:
+                vector[i] = (vector[i] + 1) % 2
+            elif t.generates(t2):
+                vector[j] = (vector[j] + 1) % 2
+        solution = (solution + 1) % 2
+    return solution
 
 if __name__ == "__main__":
     parser = ArgumentParser()

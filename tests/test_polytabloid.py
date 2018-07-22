@@ -1,5 +1,5 @@
-from ..polytabloid import find_solution
-from ..partition import Partition, hooks_gen, self_conjugates_gen, one_dimensional_gen
+from ..polytabloid import find_solution, find_solution_new
+from ..partition import Partition, partition_gen, hooks_gen, self_conjugates_gen, one_dimensional_gen
 from math import factorial
 
 def test_detect_one_dimensional():
@@ -57,3 +57,12 @@ def test_self_conjugates():
         for sc in self_conjugates_gen(i):
             assert sc.is_self_conjugate()
             assert find_solution(sc, skip_known_families=False) % 2 == 0
+
+def test_new_algorithm():
+    for n in range(2,9):
+        for partition in partition_gen(n):
+            partition = tuple(sorted(partition)[::-1])
+            p = Partition(*partition)
+            if not p.is_2special() or not p.conjugate().is_2special():
+                continue
+            assert find_solution_new(partition) == find_solution(partition)
