@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from argparse import ArgumentParser
 from itertools import permutations, product
 from copy import copy
@@ -138,22 +140,21 @@ class Tableaux(object):
                 yield t
 
     def generates(self, other):
-        mapping = {}
+        mapping = []
         for i,k in enumerate(self.vals):
             self_r, self_c = self.coords_of_index(i)
             other_r, other_c = other.coords_of_index(other.vals.index(k))
             if self_r == other_r:
-                mapping[k] = k
+                mapping.append(k)
             else:
                 try:
                     target = self.coords(other_r, self_c)
                 except IndexError: # required column permutation is impossible
                     return False
                 # other failure condition: if mapping ceases to be a bijection
-                # i.e. if there exists j -> target
-                for j in range(1, k-1):
-                    if mapping.get(j) == target:
-                        return False
+                # i.e. if there exists j ↦ target
+                if target in mapping:
+                    return False
         return True
 
 def tableaux_gen(shape):
