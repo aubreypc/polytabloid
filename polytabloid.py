@@ -140,34 +140,21 @@ class Tableaux(object):
                 yield t
 
     def generates(self, other):
-        mapping = []
+        mapping = {}
         for i,k in enumerate(self.vals):
             self_r, self_c = self.coords_of_index(i)
             other_r, other_c = other.coords_of_index(other.vals.index(k))
             if self_r == other_r:
-                mapping.append(k)
+                target = k
             else:
                 try:
                     target = self.coords(other_r, self_c)
                 except IndexError: # required column permutation is impossible
                     return False
-                # other failure condition: if mapping ceases to be a bijection
-                # i.e. if there exists j ↦ target
-                if target in mapping:
-                    return False
+            if mapping.get(target): # is this value already being mapped to?
+                return False
+            mapping[target] = True
         return True
-
-
-def tableaux_gen(shape):
-    """
-    Generates all standard tableaux for a particular partition, via brute force.
-    """
-    n = sum(shape)
-    vals = range(1, n + 1)
-    for perm in permutations(vals):
-        t = Tableaux(shape, vals=list(perm))
-        if t.is_standard():
-            yield t
 
 def total_order(shape, t=None, adding=None):
     # generates all standard tableaux, in order.
