@@ -11,14 +11,15 @@ log = get_task_logger(__name__)
 def polytabloid_vector(shape, t, standards, t_index, verbosity=0):
     vec = [0] * len(standards)
     t = Tableaux(shape, vals=t)
+    log.critical("{}: {}".format(shape, t.vals))
     for i,s in enumerate(standards[t_index:]):
         s = Tableaux(shape, vals=s)
         if t.generates(s):
-            log.info("{} --> {}".format(t.vals, s.vals)) 
+            log.debug("{} --> {}".format(t.vals, s.vals)) 
             vec[i + t_index] = 1
         else:
             if verbosity > 2:
-                log.info("{} -/> {}".format(t.vals, s.vals)) 
+                log.debug("{} -/> {}".format(t.vals, s.vals)) 
     return vec
 
 @app.task(name="tasks.sort_cols")

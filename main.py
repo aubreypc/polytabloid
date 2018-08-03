@@ -1,6 +1,6 @@
-from polytabloid import find_solution, find_solution_new
+from polytabloid import find_solution_new
+from tasks import app, find_solution_concurrent
 from partition import partition_gen, Partition
-from tasks import *
 from argparse import ArgumentParser
 import sqlite3
 import sys
@@ -122,8 +122,9 @@ if __name__ == "__main__":
                 if args.verbosity > 0:
                     print "Next partition: {}".format(faster_p)
                 if args.c:
-                    conc = find_solution_concurrent(faster_p, verbosity=args.verbosity)
-                    solution = conc.get(blocking=True)
+                    print 1
+                    solution = find_solution_concurrent(faster_p, verbosity=args.verbosity)
+                    print 1
                 else:
                     solution = find_solution_new(faster_p, verbosity=args.verbosity)
                 # conjugate has same solution, so insert both
