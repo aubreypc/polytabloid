@@ -53,13 +53,13 @@ def test_self_conjugates():
     Partitions equal to their own conjugates should always have
     solution congruent to 0 when n > 1.
     """
-    for i in range(2,8):
+    for i in range(2,12):
         for sc in self_conjugates_gen(i):
             assert sc.is_self_conjugate()
-            assert find_solution(sc, skip_known_families=False) % 2 == 0
+            assert find_solution_new(sc) % 2 == 0
 
 def test_new_algorithm():
-    for n in range(2,9):
+    for n in range(2,12):
         for partition in partition_gen(n):
             partition = tuple(sorted(partition)[::-1])
             p = Partition(*partition)

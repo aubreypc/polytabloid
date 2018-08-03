@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env/python
 # -*- coding: utf-8 -*-
 from argparse import ArgumentParser
 from itertools import permutations, product
@@ -157,6 +157,7 @@ class Tableaux(object):
                     return False
         return True
 
+
 def tableaux_gen(shape):
     """
     Generates all standard tableaux for a particular partition, via brute force.
@@ -167,31 +168,6 @@ def tableaux_gen(shape):
         t = Tableaux(shape, vals=list(perm))
         if t.is_standard():
             yield t
-
-def tableaux_gen_recursive(shape, t=None, adding=2):
-    if not t:
-        t = Tableaux(shape, vals=[1] + [None] * (sum(shape) - 1))
-    if adding == sum(shape):
-        new_vals = copy(t.vals)
-        missing = t.vals.index(None)
-        new_vals[missing] = adding
-        yield Tableaux(shape, vals=new_vals)
-    else:
-        for (i, node) in enumerate(t.vals):
-            if node == None:
-                r, c = t.coords_of_index(i)
-                if c > 0:
-                    if not t.coords(r, c-1): # left neighbor node must not be empty
-                        continue
-                if r > 0:
-                    if not t.coords(r-1, c): # above neighbor node must not be empty
-                        continue
-                new_vals = copy(t.vals)
-                new_vals[i] = adding
-                new_t = Tableaux(shape, vals=new_vals)
-                recurs = tableaux_gen_recursive(shape, t = new_t, adding = adding + 1)
-                for result in recurs:
-                    yield result
 
 def total_order(shape, t=None, adding=None):
     # generates all standard tableaux, in order.
@@ -241,7 +217,7 @@ def total_order(shape, t=None, adding=None):
             for child in total_order(shape, t=Tableaux(shape, vals=next_vals), adding=adding-1):
                 yield child
 
-def find_solution(shape, verbose=False, skip_known_families=True):
+def find_solution(shape, verbose=False, skip_known_families=True, return_matrix=False):
     if type(shape) is Partition:
         shape = shape.vals
     if skip_known_families:
@@ -267,24 +243,20 @@ def find_solution(shape, verbose=False, skip_known_families=True):
     if shape == (1,):
         # isolate this case to avoid numpy exception when building matrix
         return 1
-    gen = tableaux_gen_recursive(shape)
     if verbose:
         print "Generating all standard {}-tableaux...\n".format(shape)
     polys = []
     if verbose:
         print "-" * 20
-    for t in gen:
+    for t in [t for t in total_order(shape)][::-1]:
         standards = [t]
-        if verbose:
-            print "Next tableaux:\n{}\n".format(t)
+        #if verbose:
+        #    print "Next tableaux:\n{}\n".format(t)
         poly = set([tab for tab in t.polytabloid() if tab != t])
         if len(poly) > 1:
-            if verbose:
-                print "Found standards in polytabloid:"
             for s in poly:
                 if s.vals != t.vals:
-                    if verbose:
-                        print "{}\n".format(s)
+                    print "{} --> {}".format(t.vals, s.vals)
                     standards.append(s)
         polys.append(standards)
     columns = []
@@ -300,6 +272,9 @@ def find_solution(shape, verbose=False, skip_known_families=True):
                 vec[x] = 1
         columns.append(vec)
     matrix = column_stack(columns)
+    if return_matrix:
+        print matrix
+        return matrix
     if verbose:
         print matrix
     solution = map(int, linalg.solve(matrix, [1] * len(polys)))
@@ -311,7 +286,7 @@ def find_solution(shape, verbose=False, skip_known_families=True):
 def find_solution_new(shape, verbosity=0):
     if type(shape) == Partition:
         shape = shape.vals
-    standards = [s for s in total_order(shape)]
+    standards = [s for s in total_order(shape)][::-1]
     vector = [0] * len(standards)
     solution = 0
     for i,t in enumerate(standards):
